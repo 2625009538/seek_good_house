@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北京看房地图</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- 高德地图 JS API -->
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+            securityJsCode: '70bcbe846582254d5b79384227ad36d5',
+        }
+    </script>
+    <script type="text/javascript"
+        src="https://webapi.amap.com/maps?v=2.0&key=89092b31dc7925a68cb0fc2254063aaf&plugin=AMap.Scale,AMap.ToolBar,AMap.HawkEye,AMap.Geolocation"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <header class="header">
+            <h1>🏠 北京看房地图</h1>
+            <div class="header-right">
+                <span id="house-count">已标注 0 套房源</span>
+            </div>
+        </header>
+
+        <!-- 主体内容 -->
+        <main class="main-content">
+            <!-- 地图容器 -->
+            <div id="map-container"></div>
+
+            <!-- 右侧信息面板（暂时隐藏，后续阶段开发） -->
+            <aside class="info-panel" id="info-panel" style="display: none;">
+                <div class="panel-header">
+                    <h2>房屋详情</h2>
+                    <button class="close-btn" id="close-panel">&times;</button>
+                </div>
+                <div class="panel-content" id="panel-content">
+                    <!-- 动态填充 -->
+                </div>
+            </aside>
+        </main>
+
+        <!-- 底部状态栏 -->
+        <footer class="footer">
+            <span>提示：点击地图添加房屋标记 | 点击标记查看详情</span>
+            <span id="map-center"></span>
+        </footer>
+    </div>
+
+    <!-- 添加/编辑房屋对话框 -->
+    <div class="modal-overlay" id="add-house-modal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">添加房屋</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="house-form" class="modal-body">
+                <input type="hidden" id="house-id">
+                <input type="hidden" id="house-lng">
+                <input type="hidden" id="house-lat">
+
+                <div class="form-group">
+                    <label for="house-name">小区名称 <span class="required">*</span></label>
+                    <input type="text" id="house-name" required placeholder="请输入小区名称">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="house-building">楼号</label>
+                        <input type="text" id="house-building" placeholder="如: 5号楼">
+                    </div>
+                    <div class="form-group">
+                        <label for="house-unit">单元</label>
+                        <input type="text" id="house-unit" placeholder="如: 2单元">
+                    </div>
+                    <div class="form-group">
+                        <label for="house-floor">楼层</label>
+                        <input type="number" id="house-floor" placeholder="如: 8">
+                    </div>
+                    <div class="form-group">
+                        <label for="house-total-floors">总层数</label>
+                        <input type="number" id="house-total-floors" placeholder="如: 18">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="house-area">面积 (㎡)</label>
+                        <input type="number" step="0.01" id="house-area" placeholder="如: 89.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="house-price">价格 (万元)</label>
+                        <input type="number" step="0.01" id="house-price" placeholder="如: 450">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="house-address">详细地址</label>
+                    <input type="text" id="house-address" placeholder="自动获取，或手动输入">
+                </div>
+
+                <div class="form-group">
+                    <label for="house-beike">贝壳链接</label>
+                    <input type="url" id="house-beike" placeholder="粘贴贝壳/链家房源链接">
+                </div>
+
+                <div class="form-group">
+                    <label>标签</label>
+                    <div class="tag-container" id="tag-container">
+                        <!-- 动态加载标签 -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="house-rating">评分</label>
+                    <div class="rating-container" id="rating-container">
+                        <span class="star" data-value="1">☆</span>
+                        <span class="star" data-value="2">☆</span>
+                        <span class="star" data-value="3">☆</span>
+                        <span class="star" data-value="4">☆</span>
+                        <span class="star" data-value="5">☆</span>
+                    </div>
+                    <input type="hidden" id="house-rating" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="house-notes">备注/评价</label>
+                    <textarea id="house-notes" rows="3" placeholder="记录你对这个房子的看法..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+
+</html>
