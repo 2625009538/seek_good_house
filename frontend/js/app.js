@@ -333,6 +333,10 @@ function updateHouseCount(count) {
 // 打开添加房屋对话框
 // ========================================
 function openAddHouseModal(lng, lat) {
+    // 确保拖动已启用（如果从详情页直接点击添加）
+    map.setStatus({ dragEnable: true });
+    document.getElementById('info-panel').style.display = 'none';
+
     isEditMode = false;
     currentHouseId = null;
 
@@ -341,7 +345,19 @@ function openAddHouseModal(lng, lat) {
     document.getElementById('house-id').value = '';
     document.getElementById('house-lng').value = lng;
     document.getElementById('house-lat').value = lat;
+    document.getElementById('house-lat').value = lat;
     document.getElementById('modal-title').textContent = '添加房屋';
+
+    // 自动获取详细地址
+    document.getElementById('house-address').placeholder = '正在获取地址...';
+    const geocoder = new AMap.Geocoder({ city: '010' }); // 北京 cityCode
+    geocoder.getAddress([lng, lat], function (status, result) {
+        if (status === 'complete' && result.regeocode) {
+            document.getElementById('house-address').value = result.regeocode.formattedAddress;
+        } else {
+            document.getElementById('house-address').placeholder = '地址获取失败，请手动输入';
+        }
+    });
 
     // 重置标签和评分
     selectedTagIds = [];
@@ -428,10 +444,10 @@ function toggleTag(tagId) {
     } else {
         selectedTagIds.push(tagId);
 
-        // 大卧室标签提示
+        // "2个卧室距离远" 标签提示
         const tag = allTags.find(t => t.id === tagId);
-        if (tag && tag.name === '大卧室') {
-            showTagTip('15平米以上才算大卧室');
+        if (tag && tag.name === '2个卧室距离远') {
+            showTagTip('两个卧室足够远隐私性才好');
         }
     }
     renderTags();
@@ -459,11 +475,26 @@ function initFormEvents() {
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             closeModal();
+            // 同时关闭详情面板并恢复拖动
+            if (document.getElementById('info-panel').style.display !== 'none') {
+                document.getElementById('info-panel').style.display = 'none';
+                map.setStatus({ dragEnable: true });
+            }
         }
         // 空格键回到当前位置（仅当没有在输入框或对话框中时）
         if (e.key === ' ' && !isTyping() && !isModalOpen()) {
             e.preventDefault();
             goToMyLocation();
+        }
+
+        // Q/E 键旋转地图
+        if (!isTyping()) {
+            if (e.key.toLowerCase() === 'q') {
+                map.setRotation(map.getRotation() - 15);
+            }
+            if (e.key.toLowerCase() === 'e') {
+                map.setRotation(map.getRotation() + 15);
+            }
         }
     });
 
@@ -568,18 +599,13 @@ async function showHouseDetail(houseId) {
         document.getElementById('panel-content').innerHTML = detailHtml;
         document.getElementById('info-panel').style.display = 'flex';
 
-        // 修复鼠标拖动bug：触发mouseup重置地图拖动状态
-        const mapContainer = document.getElementById('map-container');
-        const mouseUpEvent = new MouseEvent('mouseup', {
-            bubbles: true,
-            cancelable: true,
-            view: window
-        });
-        mapContainer.dispatchEvent(mouseUpEvent);
+        // 修复鼠标拖动bug：显式禁用/启用地图拖动
+        map.setStatus({ dragEnable: false });
 
         // 关闭按钮事件
         document.getElementById('close-panel').onclick = function () {
             document.getElementById('info-panel').style.display = 'none';
+            map.setStatus({ dragEnable: true }); // 恢复拖动
         };
 
     } catch (error) {
@@ -599,6 +625,7 @@ async function deleteHouse(houseId) {
         await apiRequest(`/api/houses/${houseId}`, { method: 'DELETE' });
         showToast('删除成功', 'success');
         document.getElementById('info-panel').style.display = 'none';
+        map.setStatus({ dragEnable: true }); // 恢复拖动
         loadHouseMarkers();
     } catch (error) {
         showToast('删除失败: ' + error.message, 'error');
